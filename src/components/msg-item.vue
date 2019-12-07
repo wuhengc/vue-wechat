@@ -77,7 +77,6 @@
                 let mmm = {}
                 if(this.item.type === "GROUP") {
                     mmm.mid = this.item.conversationID
-                    debugger
                     mmm.name = this.item.groupProfile.name
                     mmm.group_num = this.item.groupMemberList ? this.item.groupMemberList.length : 0
                     mmm.avatar = this.item.groupProfile.avatar

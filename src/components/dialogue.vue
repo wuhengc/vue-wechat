@@ -2,7 +2,7 @@
     <div class="dialogue">
         <header id="wx-header">
             <div class="other">
-                <router-link :to="{path:'/wechat/dialogue/dialogue-info',query: { msgInfo: msgInfo}}" tag="span" class="iconfont icon-chat-group" v-show="$route.query.group_num&&$route.query.group_num!=1"></router-link>
+                <router-link :to="{path:'/wechat/dialogue/dialogue-info',query: { groupName: $route.query.name, groupId: $route.query.userId}}" tag="span" class="iconfont icon-chat-group" v-show="$route.query.currentConversationType=='GROUP'"></router-link>
                 <router-link :to="{path:'/wechat/dialogue/dialogue-detail',query: { msgInfo: msgInfo}}" tag="span" class="iconfont icon-chat-friends" v-show="$route.query.group_num==1"></router-link>
             </div>
             <div class="center">
@@ -21,6 +21,11 @@
                     <p class="text" v-html="contentList(item.payload)"></p>
                 </div>
                 
+                <!-- 群消息提醒 -->
+                <div v-else-if="item.type===TIM.TYPES.MSG_GRP_TIP">
+
+                </div>
+
                 <div v-else>
                     <p class="textRight" v-html="contentList(item.payload)"></p>
                     

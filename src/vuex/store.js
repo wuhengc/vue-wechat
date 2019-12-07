@@ -163,7 +163,8 @@ const state = {
 	isCompleted: false, // 当前会话消息列表是否已经拉完了所有消息
 	groupList: [], // 群列表信息
 	currentMemberList: [],  // 当前群成员信息
-	createGroupModelVisible: false // 群模型时候可见
+	createGroupModelVisible: false, // 群模型时候可见
+	message: undefined,
 }
 export default new Vuex.Store({
   state,
