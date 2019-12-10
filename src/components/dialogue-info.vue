@@ -14,7 +14,7 @@
                     <div><img :src="item.avatar"></div>
                     <p>{{item.remark||item.nick}}</p>
                 </li>
-                <li>
+                <li  v-on:click="addGroup">
                     <div><span class="iconfont icon-chat-detail-add"></span></div>
                 </li>
             </ul>
@@ -127,6 +127,12 @@
                     alert(error)
                 })
             },
+            /**
+             * 添加群成员
+             */
+            addGroup() {
+                alert('添加群成员')
+            }
         }
     }
 </script>

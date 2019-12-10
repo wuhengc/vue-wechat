@@ -14,30 +14,38 @@
             </div>
         </header>
         <section class="dialogue-section clearfix" v-on:click="MenuOutsideClick" ref="message-list" @scroll="this.onScroll">
-            <div class="row clearfix" v-for="item in currentMessageList" :class="item.flow=='out'?'position-right':'position-left'">
-                <div v-if="item.flow=='in'">
-                    <img v-if="$route.query.currentConversationType == 'GROUP'" :src="item.avatar" class="header" >
-                    <img v-else :src="$route.query.avatar" class="header" >
-                    <p class="text" v-html="contentList(item.payload)"></p>
+            <div class="row clearfix" v-for="(item,index) in currentMessageList" :class="item.flow=='out'?'position-right':'position-left'" :key="index">
+
+                <!-- 群消息提醒  -->
+                <div v-if="item.type==='TIMGroupTipElem'" class="position-center">
+                    <p class="text-center"  v-text="getGroupTipContent(item.payload)"></p>
+                </div>
+                <!-- 系统消息提醒  -->
+                <div v-else-if="item.type==='TIMGroupSystemNoticeElem'">
+                   <!-- 别人发进来的消息放在左边 -->
+                    <div v-if="item.flow=='in'">
+                        <img :src="require('../assets/images/system.png')" class="header" >
+                        <p class="text"  v-text="sysText(item)"></p>
+                    </div>
+                </div>
+
+                <!-- 普通消息 -->
+                <div v-else-if="item.type==='TIMTextElem'">
+                    <!-- 别人发进来的消息放在左边 -->
+                    <div v-if="item.flow=='in'">
+                        <img v-if="$route.query.currentConversationType == 'GROUP'" :src="item.avatar" class="header" >
+                        <img v-else-if="$route.query.currentConversationType == 'C2C'" :src="$route.query.avatar" class="header" >
+                        <img v-else-if="$route.query.currentConversationType == TIM.TYPES.CONV_SYSTEM" :src="require('../assets/images/system.png')" class="header" >
+                        <p class="text" v-if="item.type===TIM.TYPES.MSG_GRP_TIP" v-text="getGroupTipContent(item.payload)"></p>
+                        <p class="text" v-else v-html="contentList(item.payload)"></p>
+                    </div>
+                    <!-- 自己发的的消息放在右边 -->
+                    <div v-else>
+                        <p class="textRight" v-html="contentList(item.payload)"></p>
+                        <img  :src="$store.state.currentUserProfile.avatar" class="header" >
+                    </div>
                 </div>
                 
-                <!-- 群消息提醒 -->
-                <div v-else-if="item.type===TIM.TYPES.MSG_GRP_TIP">
-
-                </div>
-
-                <div v-else>
-                    <p class="textRight" v-html="contentList(item.payload)"></p>
-                    
-                    <img  :src="$store.state.currentUserProfile.avatar" class="header" >
-                </div>
-                <!-- <div v-else class="messageRight">
-                    <template v-for="(item, index) in contentList(item.payload)">
-                        <p class="textRight"  :key="index" v-if="item.name === 'text'">{{ item.text }}</p>
-                        <p class="textRight" v-else-if="item.name === 'img'"><img class="text"  :src="item.src" width="35px" height="35px" :key="index" /></p>
-                    </template>
-                    <img :src="$store.state.currentUserProfile.avatar" class="header">
-                </div> -->
             </div>
             <span class="msg-more" id="msg-more"><ul>
                     <li>复制</li>
@@ -103,6 +111,7 @@
     import { mapGetters, mapState } from 'vuex'
     import { decodeText } from '../utils/decodeText'
     import { emojiMap, emojiName, emojiUrl } from '../utils/emojiMap'
+    import { translateGroupSystemNotice } from '../utils/common'
     export default {
         data() {
             return {                                                                                                                     
@@ -138,7 +147,7 @@
                         return this.$store.state.msgList.baseMsg[i]
                     }
                 }
-            },
+            }
         },
         directives: {
             press: {
@@ -259,7 +268,7 @@
                     let text = decodeText(payload)
                     text.forEach( v => {
                         if(v.name === "text") {
-                            res += '<span>' + v.text + '</span>'
+                            res += '<span class="spanText">' + v.text + '</span>'
                         } else if(v.name === "img") {
                             res += '<img style="width:25px;height25px" src='+ v.src + '></img>'
                         }
@@ -328,15 +337,43 @@
             chooseEmoji(item) {
                 this.messageContent += item
             },
+            /**
+             * 群消息提示
+             */
+            getGroupTipContent(payload) {
+                switch (payload.operationType) {
+                    case this.TIM.TYPES.GRP_TIP_MBR_JOIN:
+                        return `群成员：${payload.userIDList.join(',')}，加入群组`
+                    case this.TIM.TYPES.GRP_TIP_MBR_QUIT:
+                        return `群成员：${payload.userIDList.join(',')}，退出群组`
+                    case this.TIM.TYPES.GRP_TIP_MBR_KICKED_OUT:
+                        return `群成员：${payload.userIDList.join(',')}，被${
+                            payload.operatorID
+                        }踢出群组`
+
+                    case this.TIM.TYPES.GRP_TIP_MBR_SET_ADMIN:
+                        return `群成员：${payload.userIDList.join(',')}，成为管理员`
+                    case this.TIM.TYPES.GRP_TIP_MBR_CANCELED_ADMIN:
+                        return `群成员：${payload.userIDList.join(',')}，被撤销管理员`
+                    default:
+                        return '[群提示消息]'
+                }
+            },
+            /**
+             * 系统提示消息解析
+             */
+            sysText(message) {
+                return translateGroupSystemNotice(message)
+            }
         },
         mounted() {
-            this.$store.dispatch(
-                'checkoutConversation',
-                this.$route.query.mid
-            )
+            if(this.$route.query.mid) {
+                this.$store.dispatch('checkoutConversation', this.$route.query.mid)
+            }
+            
             // this.$store.commit('updateConversationID', this.$route.query.mid)
             console.log(this.$store.state.currentMessageList, '当前会话')
-            console.log(this.$store.state.currentConversation.conversationID, 'conversationID')
+            // console.log(this.$store.state.currentConversation.conversationID, 'conversationID')
             console.log(this.$store.state.currentUserProfile, '当前用户数据')
         },
     }
@@ -353,6 +390,13 @@
     .position-left  {
         display: flex;
         justify-content: flex-start;
+    }
+    .position-center  {
+        width: 100%;
+        display: flex;
+        font-size: 12px;
+        color: #a5b5c1;
+        align-items: center;
     }
     .tooltip {
         width: 90%;
@@ -393,6 +437,18 @@
         transform: scale(0);
         /* opacity: 1;
         transition: initial; */
+    }
+    .text-center {
+        background: #fff;
+        padding: 4px 15px;
+        border-radius: 3px;
+        color: #a5b5c1;
+        font-size: 12px;
+        margin:0 auto;
+    }
+    .spanText {
+        width: 100%;
+        white-space: pre-wrap;
     }
 </style>
 

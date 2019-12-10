@@ -52,7 +52,7 @@
                 // 群组列表更新
                 this.tim.on(this.TIM.EVENT.GROUP_LIST_UPDATED, event => {
                     // console.log(event.data , '群组列表更新 *****')
-                    // this.$store.commit('updateGroupList', event.data)
+                    this.$store.commit('updateGroupList', event.data)
                 })
             },
             // 获取用户数据

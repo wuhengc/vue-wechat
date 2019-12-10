@@ -12,8 +12,9 @@
                 <!--如果是私聊，只显示一个头像； 如果是群聊，则显示多个头像，flex 控制样式-->
                 <div class="header" :class="[item.type=='GROUP'?'multi-header':'']">
                     <!-- <img v-for="userInfo in item.userProfile" :src="userInfo.avatar"> -->
-                    <img v-if="item.type !='GROUP'" :src="item.userProfile.avatar">
-                    <img v-else  v-for="userInfo in item.groupMemberList" :src="userInfo.avatar">
+                    <img v-if="item.type =='C2C'" :src="item.userProfile.avatar">
+                    <img v-else-if="item.type =='GROUP'"  v-for="userInfo in item.groupMemberList" :src="userInfo.avatar">
+                    <img v-if="item.type ==TIM.TYPES.CONV_SYSTEM" :src="require('../assets/images/system.png')">
                 </div>
             </div>
             <div class="desc-box">
@@ -21,12 +22,14 @@
                 <div class="desc-time">{{date}}</div>
                 <div class="desc-author" v-if="item.type=='GROUP'">{{item.groupProfile.name}}</div>
                 <!--如果没有备注好友，则显示微信昵称-->
-                <div class="desc-author" v-else>{{item.userProfile.nick||item.userProfile.userID}}</div>
+                <div class="desc-author" v-else-if="item.type=='C2C'">{{item.userProfile.nick||item.userProfile.userID}}</div>
+                <div class="desc-author" v-else-if="item.type==TIM.TYPES.CONV_SYSTEM">系统通知</div>
                 <div class="desc-msg">
                     <div class="desc-mute iconfont icon-mute" v-show="item.quiet">
                     </div>
                     <span v-if="item.type=='GROUP'">{{item.lastMessage.messageForShow}}</span>
-                    <span v-else>{{item.lastMessage.messageForShow}}</span>
+                    <span v-else-if="item.type=='C2C'">{{item.lastMessage.messageForShow}}</span>
+                    <span v-else-if="item.type==TIM.TYPES.CONV_SYSTEM">{{item.lastMessage.messageForShow}}</span>
                 </div>
             </div>
         </router-link>
@@ -75,20 +78,26 @@
              */
             updateRouterParams() {
                 let mmm = {}
-                if(this.item.type === "GROUP") {
+                // 系统消息
+                if(this.item.type === "GROUP") { // 群消息
                     mmm.mid = this.item.conversationID
                     mmm.name = this.item.groupProfile.name
                     mmm.group_num = this.item.groupMemberList ? this.item.groupMemberList.length : 0
                     mmm.avatar = this.item.groupProfile.avatar
                     mmm.userId = this.item.groupProfile.groupID
                     mmm.currentConversationType = 'GROUP'
-                } else {
+                } else if(this.item.type === "C2C") { // 私人消息
+                    console.log(this.item, "私人消息")
                     mmm.mid = this.item.conversationID
                     mmm.name = this.item.userProfile.nick||(item.userProfile.userID)
                     mmm.group_num = 1
                     mmm.avatar = this.item.userProfile.avatar
                     mmm.userId = this.item.userProfile.userID
                     mmm.currentConversationType = 'C2C'
+                } else if(this.item.type === TIM.TYPES.CONV_SYSTEM) {
+                    mmm.mid = this.item.conversationID
+                    mmm.currentConversationType = this.item.type
+                    mmm.name = '系统通知'
                 }
                 return mmm
             }
