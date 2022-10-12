@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "core-js": "^2.6.9",
-    "cos-js-sdk-v5": "^0.5.17",
+    "cos-js-sdk-v5": "^1.4.6",
     "echarts": "^4.4.0",
     "tim-js-sdk": "^2.0.9",
     "vue": "^2.5.2",
